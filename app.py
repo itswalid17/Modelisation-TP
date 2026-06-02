@@ -58,7 +58,7 @@ def color_cells(val):
         return 'background-color: #2ecc71; color: white; font-weight: bold;'
     return 'background-color: #95a5a6; color: white;'
 
-st.dataframe(m3_df.style.applymap(color_cells), use_container_width=True)
+st.dataframe(m3_df.style.map(color_cells), use_container_width=True)
 
 st.markdown("---")
 
