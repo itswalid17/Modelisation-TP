@@ -9,7 +9,7 @@ st.markdown("---")
 # ==========================================
 # 1. إعدادات الأبعاد
 # ==========================================
-st.markdown("### ⚙️ 1. Paramètres (P et T)")
+st.markdown("### ⚙️ 1. Paramètres (Dimensions)")
 col_p, col_t = st.columns(2)
 with col_p:
     P = st.number_input("Nombre de Places (P)", min_value=1, value=3, step=1, key="P")
@@ -19,50 +19,58 @@ with col_t:
 st.markdown("---")
 
 # ==========================================
-# دالة مساعدة لإنشاء شبكة إدخال متوافقة مع الهاتف
+# دالة بناء المصفوفات بإحداثيات واضحة رياضياً
 # ==========================================
-def create_input_grid(name, rows, cols, prefix):
+def create_matrix_input(name, rows, cols, row_prefix, col_prefix):
     grid_data = []
     for r in range(rows):
-        row_cols = st.columns(cols)
+        # إنشاء أعمدة لكل صف
+        cols_ui = st.columns(cols)
         row_data = []
         for c in range(cols):
-            with row_cols[c]:
-                # استخدام number_input يجبر الهاتف على فتح لوحة الأرقام
+            with cols_ui[c]:
+                # تحديد الإحداثيات بدقة (مثال: P1, T1) لكي لا يضيع المستخدم
+                if col_prefix:
+                    cell_label = f"[{row_prefix}{r+1}, {col_prefix}{c+1}]"
+                else:
+                    cell_label = f"{row_prefix}{r+1}"
+                
                 val = st.number_input(
-                    label=f"{prefix} R{r}C{c}", 
+                    label=cell_label, 
                     value=0, 
                     step=1, 
-                    key=f"{name}_{r}_{c}", 
-                    label_visibility="collapsed"
+                    key=f"{name}_{r}_{c}"
                 )
                 row_data.append(int(val))
         grid_data.append(row_data)
+        # فاصل بصري خفيف بين الصفوف لتسهيل القراءة
+        st.write("") 
     return grid_data
 
 # ==========================================
-# 2. إنشاء المصفوفات M1 و M2
+# 2. إدخال المصفوفات M1 و M2
 # ==========================================
-st.markdown("### 📊 2. Matrices $M_1$ (Pre) et $M_2$ (Post)")
+st.markdown("### 📊 2. Matrices M1 (Pre) et M2 (Post)")
+st.info("📱 Les indices [P, T] indiquent la Ligne (Place) et la Colonne (Transition).")
 
 col_m1, space, col_m2 = st.columns([1, 0.1, 1])
 
 with col_m1:
-    st.markdown("**Matrice $M_1$ (Pre)**")
-    m1_data = create_input_grid("m1", P, T, "M1")
+    st.markdown("<h5 style='color: #2980b9;'>Matrice M1 (Pre)</h5>", unsafe_allow_html=True)
+    m1_data = create_matrix_input("m1", P, T, "P", "T")
 
 with col_m2:
-    st.markdown("**Matrice $M_2$ (Post)**")
-    m2_data = create_input_grid("m2", P, T, "M2")
+    st.markdown("<h5 style='color: #8e44ad;'>Matrice M2 (Post)</h5>", unsafe_allow_html=True)
+    m2_data = create_matrix_input("m2", P, T, "P", "T")
 
 st.markdown("---")
 
 # ==========================================
-# 3. حساب وعرض M3
+# 3. حساب وعرض M3 بشكل رياضي دقيق
 # ==========================================
-st.markdown("### 🧮 3. Matrice d'Incidence $M_3$ ($M_2 - M_1$)")
+st.markdown("### 🧮 3. Matrice d'Incidence M3 (M2 - M1)")
 
-# حساب M3 بنفس خوارزمية Tkinter
+# حساب M3 رياضياً
 m3_data = []
 for r in range(P):
     row = []
@@ -71,45 +79,58 @@ for r in range(P):
         row.append(val)
     m3_data.append(row)
 
-# عرض M3 بشكل ملون تماماً كما في كودك الأصلي باستخدام HTML
-m3_html = "<div style='display: flex; justify-content: center;'><table style='border-collapse: collapse; text-align: center; font-weight: bold;'>"
+# رسم المصفوفة M3 مع رؤوس الصفوف والأعمدة (Headers)
+m3_html = """
+<div style='overflow-x: auto; display: flex; justify-content: center; margin-bottom: 20px;'>
+    <table style='border-collapse: collapse; text-align: center; font-family: Arial, sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
+"""
+
+# صف عناوين الأعمدة (T1, T2...)
+m3_html += "<tr><th style='padding: 10px; background-color: #f2f2f2; border: 1px solid #ddd;'></th>"
+for c in range(T):
+    m3_html += f"<th style='padding: 15px; background-color: #34495e; color: white; border: 1px solid #ddd;'>T{c+1}</th>"
+m3_html += "</tr>"
+
+# صفوف البيانات مع عناوين الصفوف (P1, P2...)
 for r in range(P):
     m3_html += "<tr>"
+    m3_html += f"<th style='padding: 15px; background-color: #34495e; color: white; border: 1px solid #ddd;'>P{r+1}</th>"
     for c in range(T):
         val = m3_data[r][c]
-        color = "#e74c3c" if val < 0 else ("#2ecc71" if val > 0 else "#95a5a6")
-        m3_html += f"<td style='background-color: {color}; color: white; padding: 10px 20px; border: 2px solid white;'>{val}</td>"
+        bg_color = "#fce4e4" if val < 0 else ("#e4fce4" if val > 0 else "#f9f9f9")
+        text_color = "#c0392b" if val < 0 else ("#27ae60" if val > 0 else "#7f8c8d")
+        m3_html += f"<td style='background-color: {bg_color}; color: {text_color}; padding: 15px 25px; border: 1px solid #ddd; font-weight: bold; font-size: 16px;'>{val}</td>"
     m3_html += "</tr>"
-m3_html += "</table></div>"
 
+m3_html += "</table></div>"
 st.markdown(m3_html, unsafe_allow_html=True)
+
 st.markdown("---")
 
 # ==========================================
 # 4. العلامة الابتدائية i والشعاع S
 # ==========================================
-st.markdown("### 🎯 4. Vecteurs de Marquage ($i$) et Algébrique ($S$)")
+st.markdown("### 🎯 4. Vecteurs de Marquage (i) et Algébrique (S)")
 
 col_i, space2, col_s = st.columns([1, 0.1, 1])
 
 with col_i:
-    st.markdown("**Marquage Initial ($i$)**")
-    i_data = create_input_grid("i", P, 1, "I")
-    i_vec = [row[0] for row in i_data] # تحويله إلى قائمة مسطحة
+    st.markdown("<h5 style='color: #27ae60;'>Marquage Initial (i)</h5>", unsafe_allow_html=True)
+    i_data = create_matrix_input("i", P, 1, "P", "")
+    i_vec = [row[0] for row in i_data]
 
 with col_s:
-    st.markdown("**Vecteur Algébrique ($S$)**")
-    s_data = create_input_grid("s", T, 1, "S")
-    s_vec = [row[0] for row in s_data] # تحويله إلى قائمة مسطحة
+    st.markdown("<h5 style='color: #2c3e50;'>Vecteur Algébrique (S)</h5>", unsafe_allow_html=True)
+    s_data = create_matrix_input("s", T, 1, "T", "")
+    s_vec = [row[0] for row in s_data]
 
 st.markdown("---")
 
 # ==========================================
-# 5. العمليات والمحاكاة (بنفس منطق TPmod.py)
+# 5. العمليات والمحاكاة
 # ==========================================
 st.markdown("### 🚀 5. Actions et Simulation")
 
-# حاويات لعرض النتائج
 res_alg = st.empty()
 res_fran = st.empty()
 res_sim = st.empty()
@@ -118,8 +139,8 @@ col_btn1, col_btn2 = st.columns(2)
 
 # ----- زر الحساب الجبري K -----
 with col_btn1:
-    if st.button("🧮 1. Calcul Algébrique ($K$)", use_container_width=True):
-        res_alg.empty() # تفريغ النتيجة السابقة
+    if st.button("🧮 1. Calcul Algébrique (K)", use_container_width=True):
+        res_alg.empty()
         k_result = []
         for r in range(P):
             dot_product = sum(m3_data[r][c] * s_vec[c] for c in range(T))
@@ -127,11 +148,11 @@ with col_btn1:
             k_result.append(res_val)
             
         with res_alg.container():
-            st.info("**Résultat K (Équation d'état) :**")
-            k_html = "<div style='display: flex; gap: 5px;'>"
-            for val in k_result:
+            st.info("**Résultat K (Équation d'état : K = i + M3 · S) :**")
+            k_html = "<div style='display: flex; gap: 10px; justify-content: center; margin-top: 10px;'>"
+            for idx, val in enumerate(k_result):
                 color = "#e74c3c" if val < 0 else "#2ecc71"
-                k_html += f"<div style='background-color: {color}; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px;'>{val}</div>"
+                k_html += f"<div style='text-align: center;'><span style='font-size: 12px; font-weight: bold; color: #555;'>P{idx+1}</span><br><div style='background-color: {color}; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px; min-width: 40px;'>{val}</div></div>"
             k_html += "</div>"
             st.markdown(k_html, unsafe_allow_html=True)
 
@@ -141,7 +162,6 @@ with col_btn2:
         res_fran.empty()
         franchissables = []
         for t in range(T):
-            # دالة is_franchissable مدمجة هنا
             is_franchissable = True
             for p in range(P):
                 if i_vec[p] < m1_data[p][t]:
@@ -152,38 +172,36 @@ with col_btn2:
                 
         with res_fran.container():
             if franchissables:
-                st.success(f"**Transitions Franchissables au marquage $i$ :** {', '.join(franchissables)}")
+                st.success(f"**Transitions Franchissables au marquage i :** {', '.join(franchissables)}")
             else:
                 st.error("**Aucune transition franchissable à ce stade.**")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ----- محاكاة التسلسل -----
-st.markdown("**Simulation de Séquence $S$**")
-seq_str = st.text_input("Séquence (ex: 1, 2, 1 pour $T_1 \\rightarrow T_2 \\rightarrow T_1$) :", placeholder="1, 2, 1")
+st.markdown("**🎬 Simulation de Séquence S**")
+seq_str = st.text_input("Séquence (ex: 1, 2, 1 pour T1 ➔ T2 ➔ T1) :", placeholder="1, 2, 1")
 
-if st.button("🎬 3. Simuler Séquence", use_container_width=True, type="primary"):
+if st.button("▶️ Démarrer la Simulation", use_container_width=True, type="primary"):
     res_sim.empty()
     if not seq_str.strip():
-        st.warning("⚠️ Veuillez entrer une séquence (ex: 1, 2, 1)")
+        st.warning("⚠️ Veuillez entrer une séquence valide.")
     else:
         try:
-            # تنظيف المدخلات (نفس كودك الأصلي)
             raw_seq = seq_str.replace("T", "").replace("t", "").split(",")
             sequence = [int(x.strip()) - 1 for x in raw_seq if x.strip()]
             
-            marking = list(i_vec) # أخذ نسخة من العلامة الابتدائية
+            marking = list(i_vec)
             
             with res_sim.container():
                 st.write(f"**Trace de Simulation :**")
-                st.markdown(f"**$M_0$ = {marking}**")
+                st.markdown(f"**M0 = {marking}**")
                 
                 for step, t in enumerate(sequence):
                     if t < 0 or t >= T:
-                        st.error(f"❌ La transition **$T_{t+1}$** n'existe pas.")
+                        st.error(f"❌ La transition **T{t+1}** n'existe pas.")
                         break
                         
-                    # التحقق من العبور
                     is_franchissable = True
                     for p in range(P):
                         if marking[p] < m1_data[p][t]:
@@ -191,14 +209,13 @@ if st.button("🎬 3. Simuler Séquence", use_container_width=True, type="primar
                             break
                             
                     if is_franchissable:
-                        # تطبيق الانتقال: M_new = M_old + M3[:, t]
                         for p in range(P):
                             marking[p] = marking[p] + m3_data[p][t]
-                        st.success(f"✅ **$T_{t+1}$** franchie. **$M_{step+1}$ = {marking}**")
+                        st.success(f"✅ **T{t+1}** franchie. **M{step+1} = {marking}**")
                     else:
-                        st.error(f"❌ **ÉCHEC** : **$T_{t+1}$** NON franchissable à ce stade ! Simulation arrêtée.")
-                        break # تتوقف المحاكاة إذا كان الانتقال غير ممكن
+                        st.error(f"❌ **ÉCHEC** : **T{t+1}** NON franchissable au marquage {marking} !")
+                        break
                         
         except ValueError:
-            st.error("⚠️ Format de séquence invalide. Utilisez des nombres séparés par des virgules.")
-                        
+            st.error("⚠️ Format invalide. Utilisez des nombres séparés par des virgules.")
+            
