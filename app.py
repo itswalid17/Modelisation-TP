@@ -326,4 +326,4 @@ if calc_btn or k_btn or fr_btn or sim_btn:
 
 st.divider()
 st.caption("Déployable directement sur Streamlit Community Cloud avec ce fichier comme app principale.")
-        
+    
